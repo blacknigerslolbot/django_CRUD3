@@ -1,8 +1,9 @@
-from django.shortcuts import render, get_object_or_404, redirect#, HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect
 from .models import Post, NewPost
 from django.core.paginator import Paginator
 from .forms import NewPostForm
 from django.utils import timezone
+from django.http import HttpResponseForbidden
 
 
 def index(request):
@@ -21,8 +22,6 @@ def post_list(request):
 def post_detail(request, pk):
     post = get_object_or_404(NewPost, pk=pk)
     return render(request, 'blog/post_detail.html', {'post': post})
-
-
 
 def product_detail(request):
     products = [
@@ -77,6 +76,8 @@ def post_new(reguest):
 
 def post_edit(reguest, pk):
     post = get_object_or_404(NewPost, pk=pk)
+    if post.author != reguest.user:
+        return HttpResponseForbidden('Вы не можете редактировать эту запись.')
     if reguest.method == 'POST':
         form = NewPostForm(reguest.POST, instance=post)
         if form.is_valid():
@@ -87,3 +88,17 @@ def post_edit(reguest, pk):
     else:
         form = NewPostForm(instance=post)
     return render(reguest, 'blog/post_edit.html', {'form': form})
+
+def post_draft(reguest):
+    posts = NewPost.objects.filter(published_data__isnull=True).order_by('created_date')
+    return render(request, 'blog/post_draft.html', {'posts': posts})
+
+def post_info(reguest, pk):
+    post = get_object_or_404(NewPost, pk=pk)
+    return render(reguest, 'blog/post_info.html', {'post': post})
+
+
+def post_publish(reguest, pk):
+    post = get_object_or_404(NewPost, pk=pk)
+    post_publish()
+    return redirect('post_info', pk=pk)

@@ -10,5 +10,8 @@ urlpatterns = [
     path('posts/<int:pk>/edit/', views.post_edit, name='post_edit'),
     path('about/', views.about, name='about'),
     path('contacts/', views.get_contacts, name='get_contacts'),
-    path('profile/', views.get_profile, name='profile')
+    path('profile/', views.get_profile, name='profile'),
+    path('drafts/', views.post_draft, name='post_draft'),
+    path('posts/<int:pk>/info/', views.post_info, name='post_info'),
+    path('posts/<int:pk>/publish/', views.post_publish, name='post_publish'),
 ]
