@@ -6,6 +6,9 @@
         {{ post.published_date }}
     </div>
 {% else %}
-    <p align='center'><a class="btn btn-default" href="{% url 'post_publish' pk=post.pk %}">Pyblish</a></p>
+    <p align='center'>
+        <a class="btn btn-default" href="{% url 'post_publish' pk=post.pk %}">Pyblish</a>
+        <a class="btn btn-erorr" href="{% url 'post_delete' pk=post.pk %}">Delete</a>
+    </p>
 {% endif %}
 {% endblock %}

@@ -11,7 +11,7 @@ def index(request):
 
 
 def post_list(request):
-    posts = NewPost.objects.all()
+    posts = NewPost.objects.filter(published_date__isnull=False).order_by('-published_date')
     paginator = Paginator(posts, 3)
     page_number = request.GET.get('page')
     posts_list = paginator.get_page(page_number)
@@ -57,6 +57,7 @@ def get_profile(request):
                   {'username': name, 'age': age,
                    'location': location})
 
+
 def post_new(reguest):
     if reguest.method == 'POST':
         form = NewPostForm(reguest.POST, reguest.FILES)
@@ -66,13 +67,16 @@ def post_new(reguest):
                 form.add_error('title', 'Пост с таким заголовком уже существует.')
             else:
                 post = form.save(commit=False)
-                post.published_date = timezone.now()
+                if 'save_as_draft' not in reguest.POST:
+                    post.published_date = timezone.now()
+                else:
+                    post.published_date = None
                 post.save()
                 return redirect('post_detail', pk=post.pk)
-     
     else:
         form = NewPostForm()
     return render(reguest, 'blog/post_new.html', {'form': form})
+
 
 def post_edit(reguest, pk):
     post = get_object_or_404(NewPost, pk=pk)
@@ -89,9 +93,11 @@ def post_edit(reguest, pk):
         form = NewPostForm(instance=post)
     return render(reguest, 'blog/post_edit.html', {'form': form})
 
+
 def post_draft(reguest):
     posts = NewPost.objects.filter(published_data__isnull=True).order_by('created_date')
     return render(request, 'blog/post_draft.html', {'posts': posts})
+
 
 def post_info(reguest, pk):
     post = get_object_or_404(NewPost, pk=pk)
@@ -100,5 +106,15 @@ def post_info(reguest, pk):
 
 def post_publish(reguest, pk):
     post = get_object_or_404(NewPost, pk=pk)
+    if post.author != reguest.user:
+        return  HttpResponseForbidden('Вы не можете опубликовать эту статью')
     post_publish()
     return redirect('post_info', pk=pk)
+
+
+def post_del(reguest, pk):
+    post = get_object_or_404(NewPost, pk=pk)
+    if post.author != reguest.user:
+        return  HttpResponseForbidden('Вы не можете удалить эту статью')
+    post.delete()
+    return redirect('post_draft')
